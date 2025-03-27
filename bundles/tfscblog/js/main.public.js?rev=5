@@ -1,0 +1,105 @@
+$(document).ready(function(){
+
+	var widgetLoaded = [];
+
+	if($(window).width()>=768){
+		var header = $('#header');
+
+		$(window).scroll(function(){
+			console.log('scroll');
+			if($(this).scrollTop()>146){
+				header.addClass('header-fixed');
+
+			}else{
+				header.removeClass('header-fixed');
+			}
+		});
+	}
+
+	$('#releaseOfTheWeek_ajax').one('click', function(){
+		$('#collapseOne_racc .panel-body').html('<p class="text-info text-center">Chargement...</p>')
+		getFilmOfTheWeek('/film/sortie-de-la-semaine');
+	})
+
+	function getFilmOfTheWeek(url){
+		$div = $('#collapseOne_racc .panel-body');
+		$div.css('opacity',0.5);
+		$.get(url, function(data){
+			$div.replaceWith(data);
+			$('#collapseOne_racc .panel-body').find('a[data-week]').click(function(e){
+				e.preventDefault();
+				console.log($(this).attr('href'))
+				getFilmOfTheWeek($(this).attr('href'));
+			})
+		}, 'html')
+	}
+
+	$('.img-presentation').fadeIn().click(function(){
+		$(this).parent().slideToggle("swing")
+		$(this).parent().next().slideToggle();
+	}).hover(function(){
+		$(this).animate({opacity:0.85});
+	}, function(){
+		$(this).animate({opacity:1})
+	});
+
+	$('.load-video').click(function(e){
+		e.preventDefault();
+		var $url = $(this).attr('href');
+		if(/(youtu\.be\/|[?&]v=)([^&]+)/.test($url))	{
+			var lien = 'http://www.youtube.com/embed/'+$url.match(/(youtu\.be\/|[?&]v=)([^&]+)/)[2];
+		}else{
+			var lien = $url;
+		}
+		
+		modal = '';
+		modal += '<div id="modal-video" class="modal fade hide" tabindex="-1" role="dialog" aria-labelledby="Video" aria-hidden="true">';
+	  	modal += '<div class="modal-dialog modal-md">';
+   		modal += '<div class="modal-content">';
+   		modal += '<div class="modal-header">';
+		modal += '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>';
+		modal += '<h4 class="modal-title">'+$(this).text()+'</h4>';
+		modal += '</div>';
+		modal += '<div class="modal-body">';
+		modal += '</div>';
+		modal += '</div>';
+		modal += '</div>';
+		modal += '</div>';
+		$(modal).modal().on('shown.bs.modal', function(e){
+			$(this).find('.modal-body').html('<iframe width="560" height="315" src="'+lien+'?rel=0&wmode=transparent&showinfo=0&html5=1" frameborder="0" allowfullscreen></iframe><a href="'+$url+'">La vidéo ne s\'affiche pas</a>');
+		}).on('hide.bs.modal', function(){
+			$(this).find('.modal-body').remove();
+		});
+	});
+
+	$('.widget').click(function(e){
+		var $target = $(e.target),
+			type = $target.data('type');
+
+		if(widgetLoaded.length==0){
+			$('script:last').after('<script src="/bundles/tfscblog/js/highcharts.js"></script>')
+		}
+
+		if($.inArray(type, widgetLoaded)>-1){
+			$('.widget-'+type).toggle();
+		}else{
+			widgetLoaded.push(type);
+			$('script:last').after('<script src="/bundles/tfscblog/js/widget/widget.'+type+'.js"></script>');
+		}
+		
+	});
+
+});
+
+
+/* fix window phone issue */
+if (navigator.userAgent.match(/IEMobile\/10\.0/)) {
+  var msViewportStyle = document.createElement('style')
+  msViewportStyle.appendChild(
+    document.createTextNode(
+      '@-ms-viewport{width:auto!important}'
+    )
+  )
+  document.querySelector('head').appendChild(msViewportStyle)
+}
+/* endfix */
